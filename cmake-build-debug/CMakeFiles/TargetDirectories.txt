@@ -1,0 +1,3 @@
+C:/universidad/segundo/fso/archivos/cmake-build-debug/CMakeFiles/archivos.dir
+C:/universidad/segundo/fso/archivos/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/universidad/segundo/fso/archivos/cmake-build-debug/CMakeFiles/rebuild_cache.dir
