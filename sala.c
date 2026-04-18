@@ -180,3 +180,73 @@ int recupera_estado_sala(const char* ruta_fichero) {
     close(fd);
     return 0;
 }
+
+int guarda_estado_parcial_sala(const char* ruta_fichero, size_t num_asientos, int* id_asientos) {
+    if (asientos == NULL || id_asientos == NULL || num_asientos <= 0) return -1;
+    // Abrimos en modo Lectura/Escritura (O_RDWR) porque el fichero debe existir
+    int fd = open(ruta_fichero, O_RDWR);
+    if (fd == -1) return -1;
+    int capacidad_fichero;
+    if (read(fd, &capacidad_fichero, sizeof(int)) != sizeof(int)) {
+        close(fd);
+        return -1;
+    }
+    if (capacidad_fichero != n_asientos) {
+        close(fd);
+        return -1;
+    }
+    for (size_t k = 0; k < num_asientos; k++) {
+        int i = id_asientos[k]; //número de asiento (ej: 1, 5, 10...)
+        //validamos que el asiento solicitado esté en el rango de nuestra sala
+        if (i < 1 || i > n_asientos) {
+            continue;
+        }
+        //calculamos la posición exacta del asiento i en el fichero
+        //saltamos el primer int (capacidad) y luego (i-1) ints
+        off_t posicion = sizeof(int) + (i - 1) * sizeof(int);
+        if (lseek(fd, posicion, SEEK_SET) == -1) {
+            close(fd);
+            return -1;
+        }
+        //escribimos el estado actual de ese asiento que tenemos en memoria
+        //en el array 'asientos' el índice es (i-1)
+        if (write(fd, &asientos[i - 1], sizeof(int)) != sizeof(int)) {
+            close(fd);
+            return -1;
+        }
+    }
+    close(fd);
+    return 0;
+}
+
+int recupera_estado_parcial_sala(const char* ruta_fichero, size_t num_asientos, int* id_asientos) {
+    if (asientos == NULL || id_asientos == NULL || num_asientos <= 0) return -1;
+    int fd = open(ruta_fichero, O_RDONLY); //modo solo lectura
+    if (fd == -1) return -1;
+    int capacidad_fichero;
+    if (read(fd, &capacidad_fichero, sizeof(int)) != sizeof(int)) {
+        close(fd);
+        return -1;
+    }
+    if (capacidad_fichero != n_asientos) {
+        close(fd);
+        return -1;
+    }
+    for (size_t k = 0; k < num_asientos; k++) {
+        int i = id_asientos[k]; //número de asiento (1 a N)
+        if (i < 1 || i > n_asientos) {
+            continue; 
+        }
+        off_t posicion = sizeof(int) + (i - 1) * sizeof(int);
+        if (lseek(fd, posicion, SEEK_SET) == -1) {
+            close(fd);
+            return -1;
+        }
+        if (read(fd, &asientos[i - 1], sizeof(int)) != sizeof(int)) {
+            close(fd);
+            return -1;
+        }
+    }
+    close(fd);
+    return 0;
+}
