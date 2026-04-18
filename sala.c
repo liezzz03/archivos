@@ -1,5 +1,9 @@
 #include <stdlib.h>
 #include "sala.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h> // para open() y las constantes O_RDONLY, ...
+#include <unistd.h> // para read, write, close
 
 static int* asientos = NULL; // Puntero al arreglo de asientos (NULL si no hay sala creada)
 static int n_asientos = 0; //  número total de asientos en la sala
@@ -132,4 +136,47 @@ int reserva_multiple(int npersonas, int* lista_id) {
         if (reserva_asiento(lista_id[i]) != -1) exitos++;
     }
     return exitos;
+}
+
+int guarda_estado_sala(const char* ruta_fichero){
+	if (asientos == NULL) return -1;
+	// abrimos el fichero. 0664 permisos de lectura/escrityra (rw-rw-r--)
+	int fd = open(ruta_fichero, O_WRONLY | O_CREAT | O_TRUNC, 0664);
+	if (fd == -1) return -1;
+	if (write(fd, &n_asientos, sizeof(int)) != sizeof(int)) {
+		close(fd);
+		return -1;
+	}
+	size_t bytes_a_escribir = n_asientos * sizeof(int);
+	if (write(fd, asientos, bytes_a_escribir) != bytes_a_escribir) {
+		close(fd);
+		return -1;
+	}
+	close(fd);
+	return 0;
+}
+
+int recupera_estado_sala(const char* ruta_fichero) {
+    if (asientos == NULL) return -1;
+    int fd = open(ruta_fichero, O_RDONLY);
+    if (fd == -1) return -1;
+    int capacidad_fichero;
+    //leemos la capacidad guardada en el fichero
+    if (read(fd, &capacidad_fichero, sizeof(int)) != sizeof(int)) {
+        close(fd);
+        return -1;
+    }
+    //la capacidad debe coincidir con la de la sala actual
+    if (capacidad_fichero != n_asientos) {
+        close(fd);
+        return -1;
+    }
+    //leemos el estado de los asientos y sobrescribimos el array actual
+    size_t bytes_a_leer = n_asientos * sizeof(int);
+    if (read(fd, asientos, bytes_a_leer) != bytes_a_leer) {
+        close(fd);
+        return -1;
+    }
+    close(fd);
+    return 0;
 }
