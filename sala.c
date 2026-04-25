@@ -148,7 +148,7 @@ int guarda_estado_sala(const char* ruta_fichero){
 		return -1;
 	}
 	size_t bytes_a_escribir = n_asientos * sizeof(int);
-	if (write(fd, asientos, bytes_a_escribir) != bytes_a_escribir) {
+	if (write(fd, asientos, bytes_a_escribir) != (ssize_t)bytes_a_escribir) {
 		close(fd);
 		return -1;
 	}
@@ -167,13 +167,13 @@ int recupera_estado_sala(const char* ruta_fichero) {
         return -1;
     }
     //la capacidad debe coincidir con la de la sala actual
-    if (capacidad_fichero != n_asientos) {
+    if (asientos == NULL || capacidad_fichero != n_asientos) {
         close(fd);
         return -1;
     }
     //leemos el estado de los asientos y sobrescribimos el array actual
     size_t bytes_a_leer = n_asientos * sizeof(int);
-    if (read(fd, asientos, bytes_a_leer) != bytes_a_leer) {
+    if (read(fd, asientos, bytes_a_leer) != (ssize_t)bytes_a_leer) {
         close(fd);
         return -1;
     }
